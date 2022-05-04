@@ -145,7 +145,10 @@ const useHook = () => {
             context.lastTranslationX = 0;
 
             context.containerMeasure = measure(containerRef);
-            context.frameMeasure = measure(frameRef);
+            context.frameMeasure = {
+                width: width.value,
+                height: height.value,
+            };
             context.minFrameMeasure = measure(minFrameRef);
             context.maxFrameMeasure = measure(maxFrameRef);
         },

@@ -17,7 +17,7 @@ export type IFramePointGestureContext = {
     lastTranslationY: number;
     lastTranslationX: number;
     containerMeasure: IFrameMeasure;
-    frameMeasure: IFrameMeasure;
+    frameMeasure: { width: number, height: number };
     minFrameMeasure: IFrameMeasure;
     maxFrameMeasure: IFrameMeasure;
 }
