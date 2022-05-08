@@ -29,11 +29,12 @@ export interface IFrameContext {
     height: SharedValue<number>;
     containerRef: RefObject<Animated.View>;
     frameRef: RefObject<Animated.View>;
+    initialFrameRef: RefObject<Animated.View>;
     minFrameRef: RefObject<Animated.View>;
     maxFrameRef: RefObject<Animated.View>;
-    frameIsLoaded: boolean;
     rStyle: StyleProp<ViewStyle>;
     onFrameLayout: () => void;
+    resetFrameLayout: () => void;
     onFramePanGestureEvent?: (event: GestureEvent<PanGestureHandlerEventPayload>) => void;
     onPointPanGestureEvent: (point: IFramePointName, type: IFramePointTypeScale | IFramePointTypeScaleLock) => (event: GestureEvent<any>) => void;
 }
@@ -43,6 +44,7 @@ export interface IFrameImperativeHandle {
     left: SharedValue<number>;
     width: SharedValue<number>;
     height: SharedValue<number>;
+    resetFrame: () => void;
 }
 
 export interface IFrameContainerProps<T> extends ViewProps {

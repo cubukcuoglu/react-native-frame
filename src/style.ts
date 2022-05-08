@@ -13,6 +13,7 @@ export default StyleSheet.create({
     },
     boxClearPositions: {
         position: "absolute",
+        zIndex: 2,
         margin: 0,
         marginHorizontal: 0,
         marginVertical: 0,
@@ -27,7 +28,7 @@ export default StyleSheet.create({
         minWidth: undefined,
         maxWidth: undefined,
         minHeight: undefined,
-        maxHeight: undefined
+        maxHeight: undefined,
     },
     boxMinMax: {
         position: "absolute",

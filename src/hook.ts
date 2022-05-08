@@ -1,4 +1,4 @@
-import { useState, createContext, useRef, RefObject } from "react";
+import { createContext, useRef, RefObject } from "react";
 import Animated, {
     useAnimatedGestureHandler,
     useAnimatedStyle,
@@ -8,6 +8,7 @@ import Animated, {
     measure,
     withTiming,
     WithTimingConfig,
+    withDelay,
 } from "react-native-reanimated";
 import {
     PanGestureHandlerGestureEvent,
@@ -29,6 +30,7 @@ export const Context = createContext<IFrameContext>({} as IFrameContext)
 const useHook = () => {
     const containerRef = useAnimatedRef<Animated.View>();
     const frameRef = useAnimatedRef<Animated.View>();
+    const initialFrameRef = useAnimatedRef<Animated.View>();
     const minFrameRef = useAnimatedRef<Animated.View>();
     const maxFrameRef = useAnimatedRef<Animated.View>();
 
@@ -36,14 +38,16 @@ const useHook = () => {
     const height = useSharedValue(0);
     const top = useSharedValue(0);
     const left = useSharedValue(0);
+    const opacity = useSharedValue(0);
 
     const frameMeasure = useSharedValue<IFrameMeasure>({} as IFrameMeasure);
 
-    const [frameIsLoaded, setFrameIsLoaded] = useState<boolean>(false);
     const onFrameLayoutIdRef = useRef<number>();
 
+    const frameIsLoadedRef = useRef<boolean>(false);
+
     const getMeasure = (ref: RefObject<any>): Promise<IFrameNativeMeasure> => new Promise((resolve) => {
-        ref.current?.measure((ox: number, oy: number, width: number, height: number, pageX: number, pageY: number) => {
+        ref.current?.measure?.((ox: number, oy: number, width: number, height: number, pageX: number, pageY: number) => {
             resolve({ ox, oy, width, height, pageX, pageY });
         });
     });
@@ -54,7 +58,7 @@ const useHook = () => {
         }, time);
     });
 
-    const onFrameLayout = async () => {
+    const handleFrameLayout = async (isInitialEvent?: boolean) => {
         const id = Math.random();
 
         onFrameLayoutIdRef.current = id;
@@ -63,10 +67,12 @@ const useHook = () => {
 
         if (onFrameLayoutIdRef.current !== id) return;
 
+        const _frameRef = (isInitialEvent || !frameIsLoadedRef.current) ? initialFrameRef : frameRef;
+
         const {
             0: _containerMeasure,
             1: _frameMeasure
-        }: IFrameNativeMeasure[] = await Promise.all([getMeasure(containerRef), getMeasure(frameRef)]);
+        }: IFrameNativeMeasure[] = await Promise.all([getMeasure(containerRef), getMeasure(_frameRef)]);
 
         const frameRatio = _frameMeasure.width / _frameMeasure.height;
 
@@ -95,18 +101,27 @@ const useHook = () => {
 
         frameMeasure.value = layout;
 
-        !frameIsLoaded && setFrameIsLoaded(true);
-
-        await sleep(60);
-
         const timingConfig: WithTimingConfig = {
-            duration: frameIsLoaded ? 500 : 0
+            duration: frameIsLoadedRef.current ? 500 : 0
         };
 
         width.value = withTiming(layout.width, timingConfig);
         height.value = withTiming(layout.height, timingConfig);
         top.value = withTiming(layout.y, timingConfig);
         left.value = withTiming(layout.x, timingConfig);
+        opacity.value = withDelay(60, withTiming(1, timingConfig));
+
+        frameIsLoadedRef.current = true;
+    }
+
+    const onFrameLayout = async () => handleFrameLayout();
+
+    const resetFrameLayout = async () => {
+        opacity.value = 0;
+        
+        frameIsLoadedRef.current = false;
+
+        handleFrameLayout(true);
     }
 
     const onFramePanGestureEvent = useAnimatedGestureHandler<PanGestureHandlerGestureEvent, IFrameGestureContext>({
@@ -358,7 +373,7 @@ const useHook = () => {
         left: left.value,
         width: width.value,
         height: height.value,
-        opacity: frameIsLoaded ? withTiming(1): 0
+        opacity: opacity.value
     }));
 
     return {
@@ -368,11 +383,12 @@ const useHook = () => {
         height,
         containerRef,
         frameRef,
+        initialFrameRef,
         minFrameRef,
         maxFrameRef,
-        frameIsLoaded,
         rStyle,
         onFrameLayout,
+        resetFrameLayout,
         onPointPanGestureEvent,
         onFramePanGestureEvent,
     }
